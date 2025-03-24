@@ -1,0 +1,96 @@
+#draggable-box {
+  box-sizing: border-box;
+  width: 100px;
+  height: 40px;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: green;
+  position: absolute;
+  top: 100px;
+  left: 100px;
+  z-index: 3;
+  cursor: pointer;
+  user-select: none;
+}
+
+#draggable {
+  width: 100%;
+  height: 100%;
+  background-color: #4caf50;
+}
+
+/* Shake animation */
+@keyframes shake {
+  0% {
+    transform: translate(0, 0);
+  }
+  25% {
+    transform: translate(2px, -2px);
+  }
+  50% {
+    transform: translate(-2px, 2px);
+  }
+  75% {
+    transform: translate(2px, 2px);
+  }
+  100% {
+    transform: translate(0, 0);
+  }
+}
+
+#draggable-box.holding {
+  animation: shake 0.3s infinite;
+  animation-delay: 0.3s;
+}
+
+#draggable-box.dragging {
+  background-color: #f44336;
+  animation: none;
+}
+
+.black {
+  background-color: black;
+}
+
+body {
+  font-family: Arial, sans-serif;
+}
+table {
+  border-collapse: collapse;
+}
+th,
+td {
+  box-sizing: border-box;
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: center;
+  height: 40px;
+  width: 100px;
+}
+th {
+  background-color: #f4f4f4;
+  position: sticky;
+  top: 0;
+  z-index: 3;
+}
+.time-cell {
+  width: 60px;
+  background-color: #f9f9f9;
+  font-weight: bold;
+  position: sticky;
+  left: 0;
+  z-index: 1;
+}
+tr:nth-child(even) td:not(.time-cell) {
+  background-color: #f9f9f9;
+}
+
+.time-line {
+  height: 3px;
+  background-color: black;
+  width: 100%;
+  z-index: 4;
+  position: absolute;
+}
