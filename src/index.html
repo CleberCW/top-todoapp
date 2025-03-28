@@ -7,27 +7,60 @@
     <link href="styles.css" rel="stylesheet" />
   </head>
   <body>
-    <div id="draggable-box">
-      <div id="draggable"></div>
+    <div class="main">
+      <h1>Cronograma</h1>
+      <table>
+        <thead>
+          <tr>
+            <th>Hora</th>
+            <th>Segunda</th>
+            <th>Terça</th>
+            <th>Quarta</th>
+            <th>Quinta</th>
+            <th>Sexta</th>
+            <th>Sábado</th>
+            <th>Domingo</th>
+          </tr>
+        </thead>
+        <tbody id="agenda-body"></tbody>
+      </table>
+
+      <div class="draggable-box">
+        <div class="draggable"></div>
+      </div>
+      <div id="project-form" class="form-container hidden">
+        <form class="form" action="#">
+          <label for="project-title">New Project Title</label>
+          <input id="project-title" type="text" />
+          <button type="submit">Add project</button>
+        </form>
+      </div>
+      <div id="task-form" class="form-container hidden">
+        <form class="form" action="#">
+          <label for="title">Title</label>
+          <input id="title" type="text" />
+          <label for="description">Description</label>
+          <input id="description" type="text" />
+          <label for="startTime">Start time</label>
+          <input id="startTime" type="number" />
+          <label for="endTime">End time</label>
+          <input id="endTime" type="number" />
+          <label for="title">Priority</label>
+          <select id="priority" name="priority">
+            <option value="1">High</option>
+            <option value="2">Medium</option>
+            <option value="3">Low</option>
+          </select>
+          <button type="submit" id="submit-project">Add project</button>
+        </form>
+      </div>
     </div>
 
-    <h1>Cronograma</h1>
-    <table>
-      <thead>
-        <tr>
-          <th>Hora</th>
-          <th>Segunda</th>
-          <th>Terça</th>
-          <th>Quarta</th>
-          <th>Quinta</th>
-          <th>Sexta</th>
-          <th>Sábado</th>
-          <th>Domingo</th>
-        </tr>
-      </thead>
-      <tbody id="agenda-body"></tbody>
-    </table>
+    <div class="projects">
+      <div id="projects-box" class="projects-box"></div>
+      <button id="add-project" class="add-project">Add</button>
+    </div>
 
-    <script src="index.js"></script>
+    <script type="module" src="index.js"></script>
   </body>
 </html>
