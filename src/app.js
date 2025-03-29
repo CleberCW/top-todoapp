@@ -12,13 +12,14 @@ export default function createProject(projectName) {
     setName(newName) {
       name = newName;
     },
-    addTask(title, description, startTime, endTime, priority) {
-      const taskId =
-        projectId + "-task" + Math.floor(100000 + Math.random() * 900000);
+    addTask(title, description, weekDay, startTime, endTime, priority) {
+      const taskId = "task" + Math.floor(100000 + Math.random() * 900000);
       const newTask = {
+        projectId: projectId,
         taskId: taskId,
         title: title,
         description: description,
+        weekDay: weekDay,
         startTime: startTime,
         endTime: endTime,
         priority: priority,

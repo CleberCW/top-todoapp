@@ -24,10 +24,6 @@
         </thead>
         <tbody id="agenda-body"></tbody>
       </table>
-
-      <div class="draggable-box">
-        <div class="draggable"></div>
-      </div>
       <div id="project-form" class="form-container hidden">
         <form class="form" action="#">
           <label for="project-title">New Project Title</label>
@@ -41,10 +37,20 @@
           <input id="title" type="text" />
           <label for="description">Description</label>
           <input id="description" type="text" />
+          <label for="weekDay">Weekday</label>
+          <select id="weekDay" name="weekDay">
+            <option value="1">Segunda</option>
+            <option value="2">Terça</option>
+            <option value="3">Quarta</option>
+            <option value="4">Quinta</option>
+            <option value="5">Sexta</option>
+            <option value="6">Sábado</option>
+            <option value="7">Domingo</option>
+          </select>
           <label for="startTime">Start time</label>
-          <input id="startTime" type="number" />
+          <input id="startTime" type="time" />
           <label for="endTime">End time</label>
-          <input id="endTime" type="number" />
+          <input id="endTime" type="time" />
           <label for="title">Priority</label>
           <select id="priority" name="priority">
             <option value="1">High</option>

@@ -86,14 +86,12 @@ td {
 }
 th {
   background-color: #f4f4f4;
-  position: sticky;
   top: 0;
 }
 .time-cell {
   width: 60px;
   background-color: #f9f9f9;
   font-weight: bold;
-  position: sticky;
   left: 0;
   z-index: 2;
 }

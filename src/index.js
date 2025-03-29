@@ -1,4 +1,5 @@
-/* Estou em meio a fnção para cirr um draggable div que seja da altura referente ao tempo da task em relação ao cronograma
+/* Finalmente consegui implementar o código para mudar o horário e dia da task referente à posição do dragganle box
+Próximo passo e implementar para quanda ele é redimensionado
 -
 -
 -
@@ -15,6 +16,9 @@
 */
 
 import createProject from "./app.js";
+import "./styles.css";
+import flatpickr from "flatpickr";
+import "flatpickr/dist/flatpickr.min.css";
 
 //Cronograma (tabela de horários)
 const agendaBody = document.getElementById("agenda-body");
@@ -42,6 +46,7 @@ function gerarHorario(inicio, fim) {
 
 const horarios = gerarHorario(6, 22);
 
+// ------------------   Popular tabela
 horarios.forEach((horario) => {
   // Criação da tabela com o array gerado pela função
   const tr = document.createElement("tr");
@@ -54,6 +59,8 @@ horarios.forEach((horario) => {
   for (let i = 0; i < 7; i++) {
     const td = document.createElement("td");
     td.classList.add("std-cell");
+    td.dataset.horario = `${horario}`;
+    td.dataset.dia = `${i + 1}`;
     tr.appendChild(td);
   }
 
@@ -71,7 +78,7 @@ function getCellsBelowDiv(div) {
   // Get the element under the center of the draggable
   div.style.pointerEvents = "none";
   const elementBelowStart = document.elementFromPoint(left, top);
-  const elementBelowEnd = document.elementFromPoint(left, bottom - 1);
+  const elementBelowEnd = document.elementFromPoint(left, bottom);
   div.style.pointerEvents = "auto";
   return [elementBelowStart, elementBelowEnd];
 }
@@ -135,7 +142,27 @@ document.body.addEventListener("mousedown", (e) => {
             break;
           }
         }
-        getCellsBelowDiv(draggableBox);
+        const [startCell, endCell] = getCellsBelowDiv(draggableBox);
+        for (let project of projectsList) {
+          if (project.getProjectID() == draggableBox.dataset.projectId) {
+            project.changeTask(
+              draggableBox.dataset.taskId,
+              "startTime",
+              startCell.dataset.horario
+            );
+            project.changeTask(
+              draggableBox.dataset.taskId,
+              "endTime",
+              endCell.dataset.horario
+            );
+            project.changeTask(
+              draggableBox.dataset.taskId,
+              "weekDay",
+              startCell.dataset.dia
+            );
+            displayProjects();
+          }
+        }
         isDragging = false;
       }
       //Sempre lembrar de remover os listeners
@@ -161,11 +188,16 @@ document.body.addEventListener("mousedown", (e) => {
 
     function stopResize() {
       const [firstCell, lastCell] = getCellsBelowDiv(draggableBox);
-      const [firstCellWeekDay, firstCellHour] =
-        getHourandWeekdayFromCell(firstCell);
-      const [lastCellWeekDay, lastCellHour] =
-        getHourandWeekdayFromCell(lastCell);
-      const boxProject = draggableBox.dataset.project;
+      for (let project of projectsList) {
+        if (project.getProjectID() == draggableBox.dataset.projectId) {
+          project.changeTask(
+            draggableBox.dataset.taskId,
+            "endTime",
+            lastCell.dataset.horario
+          );
+          displayProjects();
+        }
+      }
       document.removeEventListener("mousemove", resizeY);
       document.removeEventListener("mouseup", stopResize);
     }
@@ -181,21 +213,34 @@ document.body.addEventListener("mouseleave", (e) => {
 });
 
 //  --------- Relógio
+function createClockLine() {
+  const currentTime = new Date();
 
-const currentTime = new Date();
+  const timeLine = document.createElement("div");
+  timeLine.classList.add("time-line");
+  agendaBody.appendChild(timeLine);
 
-const timeLine = document.createElement("div");
-timeLine.classList.add("time-line");
-agendaBody.appendChild(timeLine);
+  const minutesCurrentTime =
+    currentTime.getHours() * 60 + currentTime.getMinutes();
+  const startMinutes = 360;
 
-const minutesCurrentTime =
-  currentTime.getHours() * 60 + currentTime.getMinutes();
-const startMinutes = 360;
+  const calculation = (40 / 30) * (minutesCurrentTime - startMinutes);
+  timeLine.style.top = `${calculation}px`;
+}
 
-const tableBody = document.querySelector("tbody");
-const tableBodyRect = tableBody.getBoundingClientRect();
-const calculation = (40 / 30) * (minutesCurrentTime - startMinutes);
-timeLine.style.top = `${calculation}px`;
+function updateClockLine() {
+  const currentTime = new Date();
+  const clockLine = document.querySelector(".time-line");
+
+  const minutesCurrentTime =
+    currentTime.getHours() * 60 + currentTime.getMinutes();
+  const startMinutes = 360;
+
+  const calculation = (40 / 30) * (minutesCurrentTime - startMinutes);
+  clockLine.style.top = `${calculation}px`;
+}
+createClockLine();
+setInterval(updateClockLine, 60 * 1000);
 
 // --------- Box com os projetos
 
@@ -270,6 +315,22 @@ projectForm.addEventListener("submit", (e) => {
   projectForm.parentNode.classList.toggle("hidden");
 });
 
+flatpickr("#startTime", {
+  enableTime: true,
+  noCalendar: true,
+  dateFormat: "H:i",
+  time_24hr: true,
+  minuteIncrement: 30,
+});
+
+flatpickr("#endTime", {
+  enableTime: true,
+  noCalendar: true,
+  dateFormat: "H:i",
+  time_24hr: true,
+  minuteIncrement: 30,
+});
+
 // --------- Add task
 
 const taskForm = document.querySelector("#task-form>form");
@@ -277,6 +338,7 @@ taskForm.addEventListener("submit", (e) => {
   e.preventDefault();
   const newTaskTitle = taskForm.querySelector("#title").value;
   const newTaskDescription = taskForm.querySelector("#description").value;
+  const newTaskWeekday = taskForm.querySelector("#weekDay").value;
   const newTaskStartTime = taskForm.querySelector("#startTime").value;
   const newTaskEndTime = taskForm.querySelector("#endTime").value;
   const newTaskPriority = taskForm.querySelector("#priority").value;
@@ -288,6 +350,7 @@ taskForm.addEventListener("submit", (e) => {
       newTaskId = project.addTask(
         newTaskTitle,
         newTaskDescription,
+        newTaskWeekday,
         newTaskStartTime,
         newTaskEndTime,
         newTaskPriority
@@ -300,12 +363,30 @@ taskForm.addEventListener("submit", (e) => {
   const documentBody = document.querySelector("body");
   const taskDiv = document.createElement("div");
   taskDiv.classList.add("draggable-box");
-  taskDiv.dataset.id = newTaskId;
+  taskDiv.dataset.taskId = newTaskId;
+  taskDiv.dataset.projectId = selectedProject.getProjectID();
   const insideTaskDiv = document.createElement("div");
   insideTaskDiv.classList.add("draggable");
   const selectedTask = selectedProject.retrieveSingleTask(newTaskId);
-  taskDiv.style.height = `${selectedTask.endTime - selectedTask.startTime}px`;
-
+  let [startHours, startMinutes] = selectedTask.startTime.split(":");
+  let [endHours, endMinutes] = selectedTask.endTime.split(":");
+  const spentTime =
+    (endHours - startHours) * 60 + Number(endMinutes) - Number(startMinutes);
+  taskDiv.style.height = `${40 * (spentTime / 60)}px`;
+  const cells = document.querySelectorAll(".std-cell");
+  let designedCell = null;
+  for (let cell of cells) {
+    if (
+      cell.dataset.horario == selectedTask.startTime &&
+      cell.dataset.dia == selectedTask.weekDay
+    ) {
+      designedCell = cell;
+    }
+  }
+  const designedCellRect = designedCell.getBoundingClientRect();
+  taskDiv.style.top = `${designedCellRect.top + window.scrollY}px`;
+  taskDiv.style.left = `${designedCellRect.left + window.scrollX}px`;
+  console.log(taskDiv.style.left);
   taskDiv.appendChild(insideTaskDiv);
   documentBody.appendChild(taskDiv);
 });
@@ -313,10 +394,8 @@ taskForm.addEventListener("submit", (e) => {
 function getHourandWeekdayFromCell(e) {
   if (e.target.matches(".std-cell")) {
     const cell = e.target;
-    const table = cell.closest("table");
-    const weekDay =
-      table.querySelector("thead tr").children[cell.cellIndex].textContent;
-    const hour = cell.parentNode.firstElementChild.textContent;
+    const weekDay = cell.dataset.day;
+    const hour = cell.dataset.hour;
     return [weekDay, hour];
   }
 }
