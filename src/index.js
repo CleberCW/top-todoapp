@@ -1,26 +1,15 @@
-/* Finalmente consegui implementar o código para mudar o horário e dia da task referente à posição do dragganle box
-Próximo passo e implementar para quanda ele é redimensionado
--
--
--
--
--
--
--
--
--
--
--
--
-
-*/
-
 import createProject from "./app.js";
 import "./styles.css";
 import flatpickr from "flatpickr";
 import "flatpickr/dist/flatpickr.min.css";
 
-//Cronograma (tabela de horários)
+// Initializers
+
+let projectsList = [];
+
+//Local Storage
+
+// Cronograma
 const agendaBody = document.getElementById("agenda-body");
 
 function gerarHorario(inicio, fim) {
@@ -71,7 +60,7 @@ horarios.forEach((horario) => {
 function getCellsBelowDiv(div) {
   let draggableBoxRect = div.getBoundingClientRect();
 
-  const left = draggableBoxRect.left;
+  const left = draggableBoxRect.left + draggableBoxRect.width / 2;
   const top = draggableBoxRect.top;
   const bottom = draggableBoxRect.bottom;
 
@@ -83,7 +72,7 @@ function getCellsBelowDiv(div) {
   return [elementBelowStart, elementBelowEnd];
 }
 
-// ---------  Drag objects
+// ---------  Drag divs
 
 const baskets = document.querySelectorAll("td.std-cell");
 
@@ -183,7 +172,8 @@ document.body.addEventListener("mousedown", (e) => {
       const dy = e.clientY - startY;
       //Aqui foi um truque, com a Math.round o valor de steps é ou 0 ou 1 (pra mais). Com isso, a mudança no height da div só ocorrerá quando steps for pelo menos um (40px nesse caso)
       const steps = Math.round(dy / 40);
-      draggableBox.style.height = `${startHeight + steps * 40}px`;
+      const heightStep = startHeight + steps * 40;
+      draggableBox.style.height = `${heightStep > 40 ? heightStep : 40}px`;
     }
 
     function stopResize() {
@@ -212,20 +202,12 @@ document.body.addEventListener("mouseleave", (e) => {
   }
 });
 
-//  --------- Relógio
-function createClockLine() {
-  const currentTime = new Date();
+//  --------- Clock line
 
+function createClockLine() {
   const timeLine = document.createElement("div");
   timeLine.classList.add("time-line");
   agendaBody.appendChild(timeLine);
-
-  const minutesCurrentTime =
-    currentTime.getHours() * 60 + currentTime.getMinutes();
-  const startMinutes = 360;
-
-  const calculation = (40 / 30) * (minutesCurrentTime - startMinutes);
-  timeLine.style.top = `${calculation}px`;
 }
 
 function updateClockLine() {
@@ -235,34 +217,32 @@ function updateClockLine() {
   const minutesCurrentTime =
     currentTime.getHours() * 60 + currentTime.getMinutes();
   const startMinutes = 360;
+  const endMinutes = 1320;
 
-  const calculation = (40 / 30) * (minutesCurrentTime - startMinutes);
+  let timeForCalculation;
+
+  if (minutesCurrentTime < startMinutes) {
+    timeForCalculation = startMinutes;
+  } else if (minutesCurrentTime > endMinutes) {
+    timeForCalculation = endMinutes;
+  } else {
+    timeForCalculation = minutesCurrentTime - startMinutes;
+  }
+
+  const calculation = (40 / 30) * timeForCalculation;
   clockLine.style.top = `${calculation}px`;
 }
 createClockLine();
+updateClockLine();
 setInterval(updateClockLine, 60 * 1000);
 
 // --------- Box com os projetos
 
-const projectsBox = document.querySelector("#projects-box");
-let projectsList = [createProject("amanhã")];
-let currentTargetDiv = null;
-
-function addTaskClickListener() {
-  const buttons = document.querySelectorAll(".add-task-button");
-
-  buttons.forEach((button) => {
-    button.addEventListener("click", function () {
-      const taskFormContainer = document.querySelector("#task-form");
-      taskFormContainer.classList.toggle("hidden");
-      currentTargetDiv = button.closest(".project-box");
-    });
-  });
-}
-
 function displayProjects() {
+  const projectsBox = document.querySelector(".projects-box");
   projectsBox.textContent = "";
   projectsList.forEach((project) => {
+    localStorage.setItem(`${project.getProjectID()}`, JSON.stringify(project));
     const projectDiv = document.createElement("div");
     projectDiv.classList.add("project-box");
     projectDiv.dataset.id = project.getProjectID();
@@ -273,26 +253,39 @@ function displayProjects() {
     const projectTasks = project.retrieveTasks();
     projectTasks.forEach((task) => {
       const taskBox = document.createElement("div");
-      taskBox.classList.add("project-box");
+      taskBox.classList.add("task-box");
       taskBox.dataset.id = task.taskId;
-      for (const property in task) {
-        const propertyText = document.createElement("p");
-        propertyText.textContent = `${property}: ${task[property]}`;
-        taskBox.appendChild(propertyText);
-      }
+      const taskTitle = document.createElement("div");
+      taskTitle.textContent = task.title;
+      taskBox.appendChild(taskTitle);
+      const taskTime = document.createElement("div");
+      const weekDays = [
+        "Segunda",
+        "Terça",
+        "Quarta",
+        "Quinta",
+        "Sexta",
+        "Sábado",
+        "Domingo",
+      ];
+      taskTime.textContent = `${weekDays[task.weekDay - 1]}  ${
+        task.startTime
+      } - ${task.endTime}`;
+      taskBox.appendChild(taskTime);
+      const deleteTaskButton = document.createElement("button");
+      deleteTaskButton.classList.add("delete-task-button");
+      deleteTaskButton.textContent = "X";
+      taskBox.appendChild(deleteTaskButton);
 
       projectDiv.appendChild(taskBox);
     });
     const addTaskButton = document.createElement("button");
     addTaskButton.classList.add("add-task-button");
-    addTaskButton.innerText = `Add task`;
+    addTaskButton.innerText = `Adicionar tarefa`;
     projectDiv.appendChild(addTaskButton);
-
     projectsBox.appendChild(projectDiv);
   });
-  if (projectsList.length > 0) {
-    addTaskClickListener();
-  }
+  addTaskClickListener();
 }
 displayProjects();
 
@@ -310,7 +303,7 @@ projectForm.addEventListener("submit", (e) => {
   const newProject = createProject(
     projectForm.querySelector("#project-title").value
   );
-  projectsList.push();
+  projectsList.push(newProject);
   displayProjects();
   projectForm.parentNode.classList.toggle("hidden");
 });
@@ -333,21 +326,41 @@ flatpickr("#endTime", {
 
 // --------- Add task
 
+let currentTargetDiv = null;
+
+function addTaskClickListener() {
+  const buttons = document.querySelectorAll(".add-task-button");
+
+  buttons.forEach((button) => {
+    button.addEventListener("click", function () {
+      const taskFormContainer = document.querySelector("#task-form");
+      taskFormContainer.classList.remove("hidden");
+      currentTargetDiv = button.closest(".project-box");
+    });
+  });
+}
+
 const taskForm = document.querySelector("#task-form>form");
 taskForm.addEventListener("submit", (e) => {
   e.preventDefault();
+  const [projectId, taskId] = createTaskFromForm(currentTargetDiv);
+  createTaskDraggable(taskId);
+  displayProjects();
+});
+
+function createTaskFromForm(div) {
   const newTaskTitle = taskForm.querySelector("#title").value;
   const newTaskDescription = taskForm.querySelector("#description").value;
   const newTaskWeekday = taskForm.querySelector("#weekDay").value;
   const newTaskStartTime = taskForm.querySelector("#startTime").value;
   const newTaskEndTime = taskForm.querySelector("#endTime").value;
   const newTaskPriority = taskForm.querySelector("#priority").value;
-  let selectedProject = null;
-  let newTaskId = null;
+  let projectId = null;
+  let taskId = null;
   for (let project of projectsList) {
-    if (currentTargetDiv.dataset.id == project.getProjectID()) {
-      selectedProject = project;
-      newTaskId = project.addTask(
+    if (div.dataset.id == project.getProjectID()) {
+      projectId = project.getProjectID();
+      taskId = project.addTask(
         newTaskTitle,
         newTaskDescription,
         newTaskWeekday,
@@ -356,18 +369,32 @@ taskForm.addEventListener("submit", (e) => {
         newTaskPriority
       );
     }
-    displayProjects();
-    taskForm.parentNode.classList.toggle("hidden");
   }
+  taskForm.parentNode.classList.add("hidden");
+  return [projectId, taskId];
+}
 
-  const documentBody = document.querySelector("body");
+function createTaskDraggable(taskId) {
+  let selectedProject = null;
+  for (let project of projectsList) {
+    if (project.retrieveSingleTask(taskId)) {
+      selectedProject = project;
+    }
+  }
+  const documentBody = document.querySelector(".main");
   const taskDiv = document.createElement("div");
   taskDiv.classList.add("draggable-box");
-  taskDiv.dataset.taskId = newTaskId;
+  taskDiv.dataset.taskId = taskId;
   taskDiv.dataset.projectId = selectedProject.getProjectID();
   const insideTaskDiv = document.createElement("div");
   insideTaskDiv.classList.add("draggable");
-  const selectedTask = selectedProject.retrieveSingleTask(newTaskId);
+  insideTaskDiv.textContent = selectedProject.retrieveSingleTask(taskId).title;
+  let randomValues = [];
+  for (let i = 0; i < 3; i++) {
+    randomValues.push(Math.floor(Math.random() * (196 - 128 + 1) + 128));
+  }
+  insideTaskDiv.style.backgroundColor = `rgb(${randomValues[0]}, ${randomValues[1]}, ${randomValues[2]}`;
+  const selectedTask = selectedProject.retrieveSingleTask(taskId);
   let [startHours, startMinutes] = selectedTask.startTime.split(":");
   let [endHours, endMinutes] = selectedTask.endTime.split(":");
   const spentTime =
@@ -386,16 +413,55 @@ taskForm.addEventListener("submit", (e) => {
   const designedCellRect = designedCell.getBoundingClientRect();
   taskDiv.style.top = `${designedCellRect.top + window.scrollY}px`;
   taskDiv.style.left = `${designedCellRect.left + window.scrollX}px`;
-  console.log(taskDiv.style.left);
+  taskDiv.style.width = `${designedCellRect.width}px`;
+  let darkerRandomValues = randomValues.map((value) => value - 20);
+  taskDiv.style.backgroundColor = `rgb(${darkerRandomValues[0]}, ${darkerRandomValues[1]}, ${darkerRandomValues[2]}`;
   taskDiv.appendChild(insideTaskDiv);
   documentBody.appendChild(taskDiv);
+}
+
+// WIndow resize correction
+
+// window.addEventListener("resize", () => {
+//   const boxes = document.querySelectorAll(".draggable-box");
+
+//   boxes.forEach((box) => {
+//     const [firstCell, lastCell] = getCellsBelowDiv(box);
+//     box.style.width = `${firstCell.getBoundingClientRect().width}px`;
+//     box.style.left = `${firstCell.getBoundingClientRect().left}px`;
+//   });
+// });
+
+// Delete task
+
+document.addEventListener("click", (e) => {
+  if (e.target.classList.contains("delete-task-button")) {
+    const task = e.target.parentNode;
+    const taskId = task.dataset.id;
+    const project = task.parentNode;
+    const projectId = project.dataset.id;
+
+    for (let project of projectsList) {
+      if (project.getProjectID() == projectId) {
+        project.removeTask(taskId);
+        displayProjects();
+      }
+    }
+
+    const draggableToRemove = document.querySelector(
+      `[data-task-id="${taskId}"]`
+    );
+    draggableToRemove.remove();
+  }
 });
 
-function getHourandWeekdayFromCell(e) {
-  if (e.target.matches(".std-cell")) {
-    const cell = e.target;
-    const weekDay = cell.dataset.day;
-    const hour = cell.dataset.hour;
-    return [weekDay, hour];
-  }
-}
+// close form
+
+const closeFormButton = document.querySelectorAll(".close-form");
+
+closeFormButton.forEach((button) => {
+  button.addEventListener("click", (e) => {
+    const container = e.target.closest(".form-container");
+    container.classList.add("hidden");
+  });
+});

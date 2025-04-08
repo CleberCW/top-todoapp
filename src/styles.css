@@ -1,3 +1,71 @@
+/* 1. Use a more-intuitive box-sizing model */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+/* 2. Remove default margin */
+* {
+  margin: 0;
+}
+/* 3. Enable keyword animations */
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    interpolate-size: allow-keywords;
+  }
+}
+body {
+  /* 4. Add accessible line-height */
+  line-height: 1.5;
+  /* 5. Improve text rendering */
+  -webkit-font-smoothing: antialiased;
+}
+/* 6. Improve media defaults */
+img,
+picture,
+video,
+canvas,
+svg {
+  display: block;
+  max-width: 100%;
+}
+/* 7. Inherit fonts for form controls */
+input,
+button,
+textarea,
+select {
+  font: inherit;
+}
+/* 8. Avoid text overflows */
+p,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  overflow-wrap: break-word;
+}
+/* 9. Improve line wrapping */
+p {
+  text-wrap: pretty;
+}
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  text-wrap: balance;
+}
+/*
+  10. Create a root stacking context
+*/
+#root,
+#__next {
+  isolation: isolate;
+}
+
 .draggable-box {
   box-sizing: border-box;
   width: 100px;
@@ -16,9 +84,16 @@
 }
 
 .draggable {
+  box-sizing: border-box;
   width: 100%;
   height: 100%;
   background-color: #4caf50;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 1ch;
+  color: white;
+  text-align: center;
 }
 
 /* Shake animation */
@@ -59,14 +134,21 @@ body {
   padding: 0;
   font-family: Arial, sans-serif;
   display: grid;
-  grid-template-columns: 800px 300px;
+  grid-template-columns: 3fr 1fr;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+}
+.main {
+  padding: 40px;
 }
 
 .projects {
   height: 100%;
-  background-color: blanchedalmond;
+  background-color: rgb(128, 226, 128);
+  padding: 30px;
   display: flex;
   flex-flow: column nowrap;
+  align-items: center;
 }
 
 table {
@@ -82,18 +164,19 @@ td {
   padding: 8px;
   text-align: center;
   height: 40px;
-  width: 100px;
+  min-width: 100px;
 }
 th {
   background-color: #f4f4f4;
   top: 0;
 }
 .time-cell {
+  position: relative;
   width: 60px;
   background-color: #f9f9f9;
   font-weight: bold;
   left: 0;
-  z-index: 2;
+  z-index: 4;
 }
 tr:nth-child(even) td:not(.time-cell) {
   background-color: #f9f9f9;
@@ -103,28 +186,57 @@ tr:nth-child(even) td:not(.time-cell) {
   height: 3px;
   background-color: black;
   width: 100%;
-  z-index: 1;
+  z-index: 3;
   position: absolute;
   margin: 0;
   padding: 0;
 }
 
-.projects {
-  display: flex;
-  align-items: center;
-}
-
 .projects-box {
   display: flex;
-  gap: 30px;
+  gap: 20px;
   align-items: center;
   flex-flow: column nowrap;
 }
 
 .project-box {
-  border: 1px solid blue;
-  border-radius: 20px;
   padding: 20px;
+  background-color: #a1b8a8;
+  text-align: center;
+  width: 300px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border-radius: 5px;
+}
+
+.task-box {
+  background-color: #676981;
+  color: white;
+  display: grid;
+  padding: 5px;
+  position: relative;
+  border-radius: 5px;
+}
+
+.task-box > :nth-child(2) {
+  font-style: italic;
+}
+
+.add-task-button {
+  background-color: #ddd;
+  border: none;
+  padding: 10px;
+  border-radius: 5px;
+}
+
+.add-project-button {
+  margin-top: 20px;
+  background-color: #ddd;
+  border: none;
+  padding: 10px;
+  width: 100%;
+  border-radius: 5px;
 }
 
 .add-project {
@@ -149,9 +261,30 @@ tr:nth-child(even) td:not(.time-cell) {
   flex-flow: column;
   background-color: white;
   padding: 30px;
-  gap: 30px;
+  gap: 10px;
+  position: relative;
+}
+
+.form div {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+textarea {
+  resize: none;
 }
 
 .hidden {
   display: none;
+}
+
+.close-form,
+.delete-task-button {
+  position: absolute;
+  right: 2px;
+  top: 2px;
+  font-size: 0.4rem;
+  background-color: #a14039;
+  border: none;
 }

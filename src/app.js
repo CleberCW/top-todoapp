@@ -67,5 +67,13 @@ export default function createProject(projectName) {
       }
       return taskToRetrieve;
     },
+    removeTask(id) {
+      for (let task of tasks) {
+        if (task.taskId == id) {
+          const index = tasks.indexOf(task);
+          tasks.splice(index, 1);
+        }
+      }
+    },
   };
 }
